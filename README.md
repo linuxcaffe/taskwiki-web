@@ -1,3 +1,5 @@
+NOTE" This fork of the excellent-but-abandonned vimwikiblog, with the intent of making it an off-the shelf taskwiki enhancement.
+
 vimwikiblog
 =========
 
