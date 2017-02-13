@@ -45,16 +45,17 @@ def getwikiattr(wikifile):
     m=re.search(p,s,re.DOTALL)
     if m:
         s=m.group(2)
-        if isvimwikibloghead(s):
-            p=r'\*(.+?)\*' # ==1
-            if re.search(p,s):
-                timestr=re.search(p,s).group(1)
-                a.time=time.strptime(timestr,"%Y-%m-%d %H:%M:%S")
-            p=r'_(.+?)_' # <=1
-            if re.search(p,s):
-                a.cat=re.search(p,s).group(1)
-            p=r'`(.+?)`'
-            a.tags=re.findall(p,s)
+        if not  isvimwikibloghead(s):
+            return None
+        p=r'\*(.+?)\*' # ==1
+        if re.search(p,s):
+            timestr=re.search(p,s).group(1)
+            a.time=time.strptime(timestr,"%Y-%m-%d %H:%M:%S")
+        p=r'_(.+?)_' # <=1
+        if re.search(p,s):
+            a.cat=re.search(p,s).group(1)
+        p=r'`(.+?)`'
+        a.tags=re.findall(p,s)
     if not a.time:
         a.time = time.gmtime(0)
     if not a.cat:
@@ -141,10 +142,11 @@ def genpages(gentpl,htmldict,attrs,indir,outdir):
     s=''
     dcat = {}
     for k,v in attrs.items():
-        key=time.strftime("%Y-%m",v.time)
-        if not dcat.get(key):
-            dcat[key] = []
-        dcat[key].append(k)
+        if v and not k.startswith('const_') and not k.startswith('hide_'):
+            key=time.strftime("%Y-%m",v.time if v else time.gmtime(0))
+            if not dcat.get(key):
+                dcat[key] = []
+            dcat[key].append(k)
     oldyear=0
     for k,v in sorted(dcat.items(),reverse=True):
         print(k,len(v),v)
@@ -169,9 +171,10 @@ def genpages(gentpl,htmldict,attrs,indir,outdir):
     s=''
     dcat = {}
     for k,v in attrs.items():
-        if not dcat.get(v.cat):
-            dcat[v.cat] = []
-        dcat[v.cat].append(k)
+        if v and not k.startswith('const_') and not k.startswith('hide_'):
+            if not dcat.get(v.cat):
+                dcat[v.cat] = []
+            dcat[v.cat].append(k)
     for k,v in sorted(dcat.items()):
         print(k,len(v),v)
         s = s + str.format('<h3 id="{0}">{0}</h3>\n', k)
@@ -191,11 +194,12 @@ def genpages(gentpl,htmldict,attrs,indir,outdir):
     s=''
     dcat = {}
     for k,v in attrs.items():
-        if v.tags:
-            for tag in v.tags:
-                if not dcat.get(tag):
-                    dcat[tag] = []
-                dcat[tag].append(k)
+        if v and not k.startswith('const_') and not k.startswith('hide_'):
+            if v.tags:
+                for tag in v.tags:
+                    if not dcat.get(tag):
+                        dcat[tag] = []
+                    dcat[tag].append(k)
     for k,v in sorted(dcat.items()):
         print(k,len(v),v)
         s = s + str.format('<h3 id="{0}">{0}</h3>\n', k)

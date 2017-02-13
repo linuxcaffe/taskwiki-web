@@ -3,6 +3,7 @@
 
 import re
 import os
+import time
 import sys
 from outlink import *
 
@@ -46,7 +47,7 @@ def dealcatandtag(s, attrs):
                 num = 0
                 if attrs:
                     for wiki,attr in attrs.items():
-                        if cat == attr.cat:
+                        if attr and cat == attr.cat:
                             num = num + 1
                 sout = sout + str.format('<li><a href="Categories.html#{0}">{0} <span>{1}</span></a></li>\n',cat,num)
             p=r'<code>(.+?)</code>'
@@ -55,7 +56,7 @@ def dealcatandtag(s, attrs):
                 num = 0
                 if attrs:
                     for wiki,attr in attrs.items():
-                        if tag in attr.tags:
+                        if attr and tag in attr.tags:
                             num = num + 1
                 sout = sout + str.format('<li><a href="Tags.html#{0}">{0} <span>{1}</span></a></li>\n',tag,num)
             sout = sout + '</ul>\n'
@@ -83,15 +84,16 @@ def addprevandnext(name, s, attrs):
     isnext = False
     if attrs:
         #print(name)
-        for k,v in sorted(attrs.items(), key=lambda p:p[1].time):
-            #print(k,v.title,v.time)
-            if isnext:
-                nextname = k
-                break;
-            if k == name:
-                isnext = True
-            else:
-                lastname = k
+        for k,v in sorted(attrs.items(), key=lambda p:p[1].time if p[1] else time.gmtime(0)):
+            if v:
+                #print(k,v.title,v.time)
+                if isnext:
+                    nextname = k
+                    break;
+                if k == name:
+                    isnext = True
+                else:
+                    lastname = k
     #print('prev&next:',lastname,nextname)
     #input()
 
@@ -118,12 +120,15 @@ def wiki2blog(file,attrs,indir,outdir):
     #外链新标签打开
     s = makelinkout(s)
 
-    #修饰tag, category, time
-    s = dealcatandtag(s, attrs)
+    print('wiki2blog:'+file)
+    if not os.path.split(file)[1].startswith('const_'):
 
-    # 添加上下篇
-    name = os.path.splitext(os.path.basename(file))[0]
-    s = addprevandnext(name, s, attrs)
+        #修饰tag, category, time
+        s = dealcatandtag(s, attrs)
+
+        # 添加上下篇
+        name = os.path.splitext(os.path.basename(file))[0]
+        s = addprevandnext(name, s, attrs)
 
     outfile = file.replace(html_dir,blog_dir)
     dir = os.path.split(outfile)[0]
